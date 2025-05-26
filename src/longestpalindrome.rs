@@ -13,42 +13,21 @@ pub fn longest_palindrome(words: Vec<String>) -> i32 {
     for w in words.iter() {
         let b = w.as_bytes();
         let (l, r) = (b[0] - b'a', b[1] - b'a');
-        counts[to_key(l, r)] += 1;
-    }
 
-    let mut has_central_double = false;
+        let key = to_key(l, r);
+        let inv_key = to_key(r, l);
 
-    for i in 0..26 {
-        for j in i..26 {
-            let key = to_key(i, j);
-
-            if i == j {
-                let count = counts[key];
-                if count == 0 {
-                    continue;
-                }
-
-                len += (count / 2) * 4;
-
-                if count % 2 == 1 {
-                    has_central_double = true;
-                }
-
-                continue;
-            }
-
-            let count_ab = counts[key];
-            let count_ba = counts[to_key(j, i)];
-
-            let pairs = count_ab.min(count_ba);
-
-            len += pairs * 4;
+        if counts[inv_key] > 0 {
+            counts[inv_key] -= 1;
+            len += 4;
+        } else {
+            counts[key] += 1;
         }
     }
 
-    if has_central_double {
-        len += 2;
-    }
-
-    len
+    len + (0..26 * 26)
+        .step_by(27)
+        .find(|&i| counts[i as usize] > 0)
+        .map(|_| 2)
+        .unwrap_or(0)
 }
