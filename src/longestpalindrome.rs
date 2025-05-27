@@ -1,33 +1,24 @@
 pub fn longest_palindrome(words: Vec<String>) -> i32 {
-    if words.len() == 0 {
-        return 0;
+    let words = std::mem::ManuallyDrop::new(words);
+    let mut lookup = [[0_u8; 26]; 26];
+    let mut result = 0;
+
+    for word in words.iter() {
+        let [a, b] = word.as_bytes() else { panic!() };
+        let [a, b] = [a, b].map(|c| (c - 97) as usize);
+
+        let tmp = lookup[b][a] > 0;
+        result += i32::from(tmp) * 4;
+        lookup[b][a] -= u8::from(tmp);
+        lookup[a][b] += u8::from(!tmp);
     }
 
-    let mut counts: [i32; 26 * 26] = [0; 26 * 26];
-    let mut len = 0i32;
-
-    fn to_key(a: u8, b: u8) -> usize {
-        a as usize * 26 + b as usize
-    }
-
-    for w in words.iter() {
-        let b = w.as_bytes();
-        let (l, r) = (b[0] - b'a', b[1] - b'a');
-
-        let key = to_key(l, r);
-        let inv_key = to_key(r, l);
-
-        if counts[inv_key] > 0 {
-            counts[inv_key] -= 1;
-            len += 4;
-        } else {
-            counts[key] += 1;
+    for c in 0..26 {
+        if lookup[c][c] > 0 {
+            result += 2;
+            break;
         }
     }
 
-    len + (0..26 * 26)
-        .step_by(27)
-        .find(|&i| counts[i as usize] > 0)
-        .map(|_| 2)
-        .unwrap_or(0)
+    result
 }
